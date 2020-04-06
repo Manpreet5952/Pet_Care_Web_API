@@ -1,0 +1,340 @@
+﻿@page
+@{}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Pet Care</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+
+    <div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
+            <a class="navbar-brand" href="#">Pet Care Appointment Session</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                      
+                    </li>
+                  
+                </ul>
+                
+            </div>
+        </nav>
+
+
+        <div class="container">
+            <button class="btn btn-outline-warning" data-toggle="modal" data-target="#addRecord">New Pet Care Session</button>
+            <table class="table table-striped  table-primary">
+                <thead>
+                    <tr>
+                        <th>Pet Name</th>
+                        <th>Pet Type </th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                      
+
+                    </tr>
+                </thead>
+                <tbody id="petCareRecords">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+
+
+
+
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script>
+        var uri = 'api/PetCareSessions';
+
+        $(document).ready(function () {
+           
+            $.getJSON(uri)
+                .done(function (data) {
+
+                    $("#petCareRecord").tmpl(data).appendTo("#petCareRecords");
+                });
+        });
+
+
+
+        function getAllRecords() {
+
+               $.getJSON(uri)
+                   .done(function (data) {
+
+                       $("#petCareRecords").text("");
+
+                    $("#petCareRecord").tmpl(data).appendTo("#petCareRecords");
+                });
+
+        }
+
+        function addRecord() {
+            var _petName = $('#petName').val();
+            var _petType = $('#petType').val();
+            var _start=$('#start').val();
+            var _end = $('#end').val();
+           
+
+
+            var petRecord = {
+                petName: _petName,
+                petType :_petType,
+                start:  _start, 
+                end :_end 
+               
+           
+            };
+
+            $.ajax({
+                type: "POST",
+                url: uri,
+                data: JSON.stringify(petRecord),
+                contentType: "application/json; charset=utf-8"
+            }).done(function (response) {
+                $("#result").html("Added a new pet record");
+                getAllRecords();
+            }).fail(function (jqXHR, textStatus) {
+                          $("#result").html("Pet record not added.");
+               });
+
+
+
+
+        }
+
+
+
+
+
+        function updateRecord() {
+           var _petName = $('#_petName').val();
+            var _petType = $('#_petType').val();
+            var _start=$('#_start').val();
+            var _end = $('#_end').val();
+          
+
+
+            
+            var petRecord = {
+                id:  parseInt($('#_id').val()),
+                petName: _petName,
+                petType :_petType,
+                start:  _start, 
+                end :_end 
+            };
+
+            $.ajax({
+                type: "PUT",
+                url: uri+"/"+ $('#_id').val(),
+                data: JSON.stringify(petRecord),
+                contentType: "application/json; charset=utf-8"
+            }).done(function (response) {
+                $("#resultUpdate").html("Chenged pet record");
+                getAllRecords();
+            }).fail(function (jqXHR, textStatus) {
+                          $("#resultUpdate").html("Failed to change the pet record");
+               });;
+
+
+
+
+        }
+
+
+
+        function remove(id) {
+
+
+          var yes =  confirm("Delete pet record?");
+
+            if (yes) {
+                $.ajax({
+                    type: "DELETE",
+                    url: uri + "/" + id,
+
+                }).done(function (response) {
+
+                    getAllRecords();
+                });
+
+            }
+
+
+        }
+
+
+         
+
+
+        function getPetRecord(id) {
+
+             $.ajax({
+                type: "GET",
+                url: uri+"/"+id,
+               contentType: "application/json"
+             }).done(function (response) {
+
+                  $('#_id').val(response.id);
+                 $('#_petName').val(response.petName) ;
+                 $('#_petType').val(response.petType);
+                 $('#_start').val(response.start);
+                 $('#_end').val(response.end);
+              
+
+              
+
+
+            });
+
+
+        }
+    </script>
+
+    
+
+    <script id="petCareRecord" type="text/x-jquery-tmpl">
+       
+        <tr>
+
+            <td> ${petName}</td>
+            <td>${petType}</td>
+            <td>${start}</td>
+            <td>${end}</td>
+           
+            <td> <button class="btn btn-primary" onclick="getPetRecord('${id}')" data-toggle="modal" data-target="#updateRecord">Modify</button></td>
+            <td> <a href="#" class="btn btn-outline-danger" onclick="remove('${id}')">Delete</a></td>
+
+        </tr>
+    </script>
+
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="addRecord">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Pet session</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="name">Pet Name</label>
+                            <input type="text" class="form-control" id="petName" >
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Pet Type</label>
+                            <select id="petType">
+                                <option value="Cat">Cat</option>
+                                <option value="Dog">Dog</option>
+                               
+                               
+                            </select>
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Start time</label>
+                            <input type="datetime-local" class="form-control" id="start">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">End time</label>
+                            <input type="datetime-local" class="form-control" id="end">
+
+                        </div>
+                        
+
+                        <div class="form-group" id="result">
+
+
+                        </div>
+                        <button type="button" onclick="addRecord()" class="btn btn-primary">Add Session</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="updateRecord">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modify Pet Session </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+
+                        <div class="form-group">
+
+                            <input type="hidden" class="form-control" id="_id" aria-describedby="emailHelp">
+
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name">Pet Name</label>
+                            <input type="text" class="form-control" id="_petName">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Pet Type</label>
+                            <select id="_petType">
+                                <option value="Cat">Cat</option>
+                                <option value="Dog">Dog</option>
+
+
+                            </select>
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Start time</label>
+                            <input type="datetime-local" class="form-control" id="_start">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">End time</label>
+                            <input type="datetime-local" class="form-control" id="_end">
+
+                        </div>
+
+                        <div class="form-group" id="resultUpdate">
+
+
+                        </div>
+                        <button type="button" onclick="updateRecord()" class="btn btn-primary">Update Record</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
